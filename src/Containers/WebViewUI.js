@@ -1,4 +1,6 @@
+import { setStorageData } from '@/Navigators/utils'
 import { updateUserDetails } from '@/Store/UserDetails'
+import { AsyncStorage } from '@react-native-community/async-storage'
 import React from 'react'
 import {
   View,
@@ -11,8 +13,9 @@ import {
 import { WebView } from 'react-native-webview'
 import { useDispatch } from 'react-redux'
 
-function WebViewUI(props) {
+function WebViewUI({ route, navigation }) {
   const webviewRef = React.useRef(null)
+  const { customUrl = '' } = route?.params
   const dispatch = useDispatch()
 
   function onMessage(data) {
@@ -24,20 +27,26 @@ function WebViewUI(props) {
       const message = messageData && messageData.message
 
       if (message && message == 'SAVE_DATA') {
-        console.log(messageData)
-        const userId = messageData.data.userId
-        const token = messageData.data.token
-
-        dispatch(updateUserDetails({ userId, token }))
+        // console.log(messageData)
+        const userId = messageData.data.id
+        const token = messageData.data.access_token
+        if (userId && token) {
+          dispatch(updateUserDetails({ userId, token }))
+          handleSaveFromWebview(userId, token)
+          //redux is not persisting state so using Aync storage for now
+        }
       } else {
-        props.navigation.navigate('MainReal')
+        navigation.navigate('MainReal')
       }
     } catch (err) {
       console.log(err)
     }
   }
 
-  function handleSaveFromWebview() {}
+  function handleSaveFromWebview(userId, token) {
+    setStorageData('userId', JSON.stringify(userId))
+    setStorageData('authToken', token)
+  }
 
   function webViewgoback() {
     if (webviewRef.current) webviewRef.current.goBack()
@@ -56,12 +65,13 @@ function WebViewUI(props) {
       />
     )
   }
+  console.log('dddd')
   return (
     <>
       <SafeAreaView style={styles.flexContainer}>
         <WebView
-          // source={{ uri: 'http://localhost:3001/login' }}
-          source={{ uri: 'https://bnpl-dev.kredmint.in/' }}
+          // source={{ uri: customUrl || 'http://localhost:3001/login' }}
+          source={{ uri: customUrl || 'https://bnpl-dev.kredmint.in/' }}
           renderLoading={LoadingIndicatorView}
           startInLoadingState={true}
           ref={webviewRef}
@@ -71,9 +81,7 @@ function WebViewUI(props) {
           <TouchableOpacity onPress={webViewgoback}>
             <Text style={{ color: 'green' }}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => props.navigation.navigate('MainReal')}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate('MainReal')}>
             <Text style={{ color: 'green' }}>Exit</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={webViewNext}>

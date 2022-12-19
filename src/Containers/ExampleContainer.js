@@ -28,7 +28,7 @@ const ExampleContainer = () => {
   }, [fetchOne, userId])
 
   const onChangeTheme = ({ theme, darkMode }) => {
-    dispatch(changeTheme({ theme, darkMode }))
+    dispatch(changeTheme({ theme, darkMode: false }))
   }
 
   return (

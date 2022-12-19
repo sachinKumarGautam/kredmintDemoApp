@@ -9,13 +9,13 @@ const slice = createSlice({
         state.theme = theme
       }
       if (typeof darkMode !== 'undefined') {
-        state.darkMode = darkMode
+        state.darkMode = false
       }
     },
     setDefaultTheme: (state, { payload: { theme, darkMode } }) => {
       if (!state.theme) {
         state.theme = theme
-        state.darkMode = darkMode
+        state.darkMode = false
       }
     },
   },

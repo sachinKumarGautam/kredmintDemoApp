@@ -4,6 +4,7 @@
  *
  * You can add other navigation functions that you need and export them
  */
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   CommonActions,
   createNavigationContainerRef,
@@ -36,5 +37,35 @@ export const navigateAndSimpleReset = (name, index = 0) => {
         routes: [{ name }],
       }),
     )
+  }
+}
+
+export const randomInvoiceId = () => {
+  return 'IN' + Math.floor(Math.random() * 90000) + 10000
+}
+
+//storage
+
+export const setStorageData = async (key, value) => {
+  try {
+    await AsyncStorage.setItem(key, value)
+  } catch (error) {
+    console.log('error saving data')
+    // Error saving data
+  }
+}
+
+export const getStorageData = async key => {
+  try {
+    const value = await AsyncStorage.getItem(key)
+    if (value !== null) {
+      // We have data!!
+      console.log(value)
+
+      return value
+    }
+  } catch (error) {
+    console.log('error getting data')
+    // Error saving data
   }
 }
