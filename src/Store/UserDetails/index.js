@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const slice = createSlice({
   name: 'userDetails',
-  initialState: { userId: null, token: null },
+  initialState: { userId: null, token: null, phone: null },
   reducers: {
     updateUserDetails: (state, { payload: { userId, token } }) => {
       if (typeof userId !== 'undefined') {
@@ -12,9 +12,14 @@ const slice = createSlice({
         state.token = token
       }
     },
+    updatePhone: (state, { payload: { phone } }) => {
+      if (phone) {
+        state.phone = phone
+      }
+    },
   },
 })
 
-export const { updateUserDetails } = slice.actions
+export const { updateUserDetails, updatePhone } = slice.actions
 
 export default slice.reducer

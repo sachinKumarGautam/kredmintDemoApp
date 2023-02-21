@@ -5,7 +5,7 @@
 export default function () {
   return {
     logo: {
-      uri: 'https://thecodingmachine.github.io/react-native-kredmintwrapper2/img/TOM-small.png',
+      uri: 'https://i0.wp.com/kredmint.com/wp-content/uploads/2022/09/cropped-Kredmint-Thumbnail1.1-10.png?fit=32%2C32&ssl=1',
     },
   }
 }

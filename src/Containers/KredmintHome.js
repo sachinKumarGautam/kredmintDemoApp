@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import Snackbar from 'react-native-snackbar'
 
 import {
   View,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/Hooks'
@@ -23,38 +25,111 @@ import { Modal } from '@/Components/Modal'
 import { Button } from '@/Components/Button'
 import FormFlow2 from '@/Components/Flow2Form'
 
-const KredmintHome = props => {
+const KredmintCTA = ({ eligibilityData, navigation, eyebrow }) => {
+  const { Common, Fonts, Gutters } = useTheme()
+  return (
+    <>
+      <Text style={styles.text}>{eyebrow}</Text>
+      <TouchableOpacity
+        style={[Common.button.outline, Gutters.regularBMargin, styles.button1]}
+        onPress={() =>
+          navigation.navigate('WebView1', {
+            customUrl: eligibilityData?.landingUrl,
+          })
+        }
+      >
+        <View style={styles.buttonInner}>
+          <Image
+            style={styles.tinyLogo}
+            source={{
+              uri: eligibilityData?.logoUrl,
+            }}
+          />
+          <View>
+            <Text style={Fonts.textSmall}>{eligibilityData?.title}</Text>
+            <Text style={[Fonts.textSmall, styles.textSmall]}>
+              {eligibilityData?.subTitle}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </>
+  )
+}
+
+const KredmintHome = ({ route, navigation }) => {
   const { Common, Fonts, Gutters, Layout } = useTheme()
   const [isModalVisible, setIsModalVisible] = React.useState(false)
   const [modalError, setError] = React.useState('')
+  const [showError, setApiError] = React.useState(false)
+  const [isLoading, setLoading] = React.useState(false)
+  const phoneFromRedux = useSelector(state => state.userDetails?.phone)
+
+  const [eligibilityData1, setEligibilityData1] = React.useState(null)
+  const [eligibilityData2, setEligibilityData2] = React.useState(null)
+
+  // const { phone = '' } = route?.params
   const [date, setDate] = React.useState(new Date())
   const [amount, setAmount] = React.useState(null)
-  // const userId = useSelector(state => state.userDetails.userId)
-  // const token = useSelector(state => state.userDetails.token)
+  // console.log('phone', phone)
+  useEffect(() => {
+    checkEligibility('profile', setEligibilityData1)
+  }, [])
 
-  // const { t } = useTranslation()
+  useEffect(() => {
+    // dispatch(updatePhone({ phone }))
+  }, [phoneFromRedux])
+
+  const checkEligibility = async (type, setFn) => {
+    const body = {
+      username: phoneFromRedux,
+      page: 'profile',
+    }
+    if (type === 'payment') {
+      body.invoiceNumber = randomInvoiceId()
+      body.paymentDate = 1671906600000
+      body.amount = 1000
+    }
+
+    try {
+      setLoading(true)
+      const data = await fetch(
+        'https://user-dev.kredmint.in/user/eligibility',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic UXFwd2RaNlZiVGtOcG0wRmtYc2NDekd5ZDY6VzRwcW9YUndKN2RzeUczejh3dWd5OEJERDd2SHZy`,
+          },
+          body: JSON.stringify(body),
+        },
+      ).then(async data => {
+        if (!data.ok) {
+          console.log('helo', data)
+          console.log('helo2', data.message)
+          const errorData = await data.json()
+          console.log('helo', errorData)
+          throw errorData
+        } else {
+          return data.json()
+        }
+      })
+
+      if (data && data.payload) {
+        setFn(data.payload)
+      }
+      setLoading(false)
+      return data
+    } catch (error) {
+      setLoading(false)
+      setApiError(true)
+      console.log('rrrr', error)
+    }
+  }
 
   const handleModal = async () => {
-    let userId = await getStorageData('userId')
-    userId = userId.replace(/^"(.*)"$/, '$1')
-    let token = await getStorageData('authToken')
-    token = token.replace(/^"(.*)"$/, '$1')
-
-    if (!userId) {
-      setError(
-        'User Id is not present please complete sign up and submit details',
-      )
-      return
-    }
     if (!amount) {
       setError('Please enter valid amount')
-      return
-    }
-
-    if (!token) {
-      setError(
-        'User token is not present please complete sign up and submit details',
-      )
       return
     }
 
@@ -63,42 +138,9 @@ const KredmintHome = props => {
       return
     }
 
-    try {
-      const initData = await fetch(
-        'https://account-dev.kredmint.in/account/init',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            invoiceNumber: randomInvoiceId(),
-            date: date,
-            amount: amount,
-            userId: userId,
-          }),
-        },
-      ).then(data => data.json())
-      const url = initData.payload
-      if (url) {
-        props.navigation.push('WebView1', {
-          customUrl: `${url}&token=${token}`,
-        })
-        setError('')
-        setIsModalVisible(false)
-      } else {
-        if (initData.error) {
-          setError(initData.error)
-        }
-      }
-      //Navigate to webui
-    } catch (err) {
-      console.log('error from init', InitData)
-    }
+    checkEligibility('payment', setEligibilityData2)
 
-    // setIsModalVisible(() => !isModalVisible)
+    setIsModalVisible(() => !isModalVisible)
   }
   //   const init = async () => {
   //     await new Promise(resolve =>
@@ -115,24 +157,43 @@ const KredmintHome = props => {
   //   })
   return (
     <View style={[Layout.fill, Layout.colCenter]}>
-      {/* <Brand /> */}
+      <Brand />
       {/* <ActivityIndicator size={'large'} style={[Gutters.largeVMargin]} /> */}
       <Text style={[Fonts.textRegular, styles.mainHeading]}>
         {'Welcome to Kredmint Demo App'}
       </Text>
       {/* <Text style={Fonts.textCenter}>{'Test flow 1'}</Text> */}
-      <TouchableOpacity
-        style={[Common.button.outline, Gutters.regularBMargin]}
-        onPress={() => props.navigation.navigate('WebView1', { customUrl: '' })}
-      >
-        <Text style={Fonts.textRegular}>Get credit limit flow</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[Common.button.outline, Gutters.regularBMargin]}
-        onPress={() => setIsModalVisible(true)}
-      >
-        <Text style={Fonts.textRegular}>Pay via Kredmint flow</Text>
-      </TouchableOpacity>
+      {!isLoading && !showError ? (
+        <>
+          {eligibilityData1 ? (
+            <KredmintCTA
+              eligibilityData={eligibilityData1}
+              navigation={navigation}
+              eyebrow="Profile"
+            />
+          ) : null}
+          {eligibilityData2 ? (
+            <KredmintCTA
+              eligibilityData={eligibilityData2}
+              navigation={navigation}
+              eyebrow="Payment"
+            />
+          ) : (
+            <TouchableOpacity
+              style={[
+                Common.button.outline,
+                Gutters.regularBMargin,
+                styles.button1,
+              ]}
+              onPress={() => {
+                setIsModalVisible(true)
+              }}
+            >
+              <Text style={[Fonts.textRegular]}>Show Payment CTA</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      ) : null}
       <Modal isVisible={isModalVisible}>
         <Modal.Container>
           <Modal.Header title="Enter these details" />
@@ -159,6 +220,11 @@ const KredmintHome = props => {
           </Modal.Footer>
         </Modal.Container>
       </Modal>
+      {(!phoneFromRedux || showError) &&
+        Snackbar.show({
+          text: 'Something went wrong',
+          duration: Snackbar.LENGTH_SHORT,
+        })}
     </View>
   )
 }
@@ -173,10 +239,34 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  textSmall: {
+    fontSize: 12,
+  },
+  tinyLogo: {
+    width: 40,
+    height: 40,
+    paddingRight: 10,
+  },
+  button1: {
+    minHeight: 80,
+    height: 'auto',
+    width: '90%',
+    borderColor: '#224091',
+  },
+  buttonInner: {
+    display: 'flex',
+    flexDirection: 'row',
+    paddingLeft: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingRight: 10,
+  },
   text: {
     fontSize: 16,
     fontWeight: '400',
-    textAlign: 'center',
+    textAlign: 'left',
+    color: '#000',
+    paddingBottom: 10,
   },
   errorText: {
     fontSize: 16,

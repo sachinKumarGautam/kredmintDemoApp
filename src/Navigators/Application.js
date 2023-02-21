@@ -6,6 +6,7 @@ import { KredmintHome, StartupContainer, WebViewUI } from '@/Containers'
 import { useTheme } from '@/Hooks'
 import MainNavigator from './Main'
 import { navigationRef } from './utils'
+import LoginScreen from '@/Containers/LoginScreen'
 
 const Stack = createStackNavigator()
 
@@ -21,8 +22,8 @@ const ApplicationNavigator = () => {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Startup" component={StartupContainer} />
           <Stack.Screen
-            name="Main"
-            component={MainNavigator}
+            name="Login"
+            component={LoginScreen}
             options={{
               animationEnabled: false,
             }}

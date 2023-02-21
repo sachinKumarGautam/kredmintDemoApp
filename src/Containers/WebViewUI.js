@@ -77,7 +77,7 @@ function WebViewUI({ route, navigation }) {
           ref={webviewRef}
           onMessage={onMessage}
         />
-        <View style={styles.tabBarContainer}>
+        {/* <View style={styles.tabBarContainer}>
           <TouchableOpacity onPress={webViewgoback}>
             <Text style={{ color: 'green' }}>Back</Text>
           </TouchableOpacity>
@@ -87,7 +87,7 @@ function WebViewUI({ route, navigation }) {
           <TouchableOpacity onPress={webViewNext}>
             <Text style={{ color: 'green' }}>Next</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </SafeAreaView>
     </>
   )

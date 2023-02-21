@@ -14,7 +14,7 @@ import {
 
 import { api } from '@/Services/api'
 import theme from './Theme'
-import userDetails from './Theme'
+import userDetails from './UserDetails'
 
 const reducers = combineReducers({
   theme,
